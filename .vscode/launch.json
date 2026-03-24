@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Expo debug: Android",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run start:dev:android"
+    },
+    {
+      "name": "Expo run: Android",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run android"
+    }
+  ]
+}
