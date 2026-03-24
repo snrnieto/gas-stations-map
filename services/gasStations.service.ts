@@ -1,5 +1,16 @@
-import { gasStationsMock } from '../mock/gasStations';
-import type { FuelType, GasStation, GetGasStationsParams } from '../types/gasStation';
+import { stationsMock, pricesFromSeed } from '../mock/gasStations';
+import {
+  getPriceHistoryForStation,
+  latestPriceByStationId,
+} from '../mock/stationPrices';
+import type {
+  FuelType,
+  GasStation,
+  GetGasStationsParams,
+  PriceHistoryEntry,
+  Prices,
+  StationRow,
+} from '../types/gasStation';
 import { haversineDistanceKm } from '../utils/haversine';
 
 function randomInt(min: number, max: number): number {
@@ -14,13 +25,23 @@ function getPriceForFuelType(station: GasStation, fuelType: FuelType): number {
   return station.prices[fuelType];
 }
 
+/**
+ * Une fila de estación + último snapshot de precios (simula una sola respuesta tipo vista/RPC en Supabase).
+ */
+function stationRowToGasStation(row: StationRow, latestById: Map<string, Prices>): GasStation {
+  const prices = latestById.get(row.id) ?? pricesFromSeed(row.id);
+  return {
+    ...row,
+    prices: { ...prices },
+  };
+}
+
 export async function getGasStations(
   params: GetGasStationsParams,
 ): Promise<GasStation[]> {
-  // 1) Simular latencia tipo backend real.
   await delay(randomInt(500, 1000));
 
-  const radiusKm = params.radius ?? 8; // 5–10 km por defecto
+  const radiusKm = params.radius ?? 8;
   const limit = Math.min(params.limit ?? 120, 150);
   const fuelType = params.fuelType;
   const minPrice = params.minPrice;
@@ -29,14 +50,7 @@ export async function getGasStations(
   const lat = params.lat;
   const lng = params.lng;
 
-  // 2–3) Procesar datos como backend:
-  // - calcular distancia (Haversine)
-  // - filtrar por radio
-  // - filtrar por tipo (aplicado al precio para rango min/max)
-  // - filtrar por rango de precios
-  // - ordenar por distancia
-  // - limitar resultados
-  const results = gasStationsMock
+  const results = stationsMock
     .map((station) => {
       const distanceKm = haversineDistanceKm(
         lat,
@@ -44,13 +58,13 @@ export async function getGasStations(
         station.latitude,
         station.longitude,
       );
-      return { ...station, distanceKm };
+      const withPrices = stationRowToGasStation(station, latestPriceByStationId);
+      return { ...withPrices, distanceKm };
     })
     .filter((station) => station.distanceKm !== undefined && station.distanceKm <= radiusKm)
     .filter((station) => {
       if (minPrice === undefined && maxPrice === undefined) return true;
 
-      // Si no hay fuelType seleccionado, asumimos 'corriente' para aplicar rango.
       const selectedFuelType: FuelType = fuelType ?? 'corriente';
       const selectedPrice = getPriceForFuelType(station, selectedFuelType);
 
@@ -64,3 +78,14 @@ export async function getGasStations(
   return results;
 }
 
+/**
+ * Simula GET /stations/:id/price-history — misma fuente que `stationPricesMock`.
+ */
+export async function getStationPriceHistory(stationId: string): Promise<PriceHistoryEntry[]> {
+  await delay(randomInt(350, 800));
+
+  return getPriceHistoryForStation(stationId).map((e) => ({
+    recordedAt: e.recordedAt,
+    prices: { ...e.prices },
+  }));
+}

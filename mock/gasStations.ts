@@ -1,6 +1,7 @@
-import type { GasStation, Prices } from '../types/gasStation';
+import type { Prices, StationRow } from '../types/gasStation';
 
-const raw: Omit<GasStation, 'prices' | 'distanceKm'>[] = [
+/** Mock tabla `stations` (Cali + Bogotá). Precios: `mock/stationPrices.ts`. */
+export const stationsMock: StationRow[] = [
   { id: "e7c4b1a1-9d2a-4c5e-8f1a-3b2c1d0e9f8a", name: "Estación Bochalema", businessName: "Independiente", address: "Cra. 109 con Calle 48, Cali", latitude: 3.3594, longitude: -76.5797 },
   { id: "f8d5c2b2-0e3b-5d6f-9g2b-4c3d2e1f0g9b", name: "Full Gas La Floresta", businessName: "Full Gas", address: "Transversal 29 # 18-106, Cali", latitude: 3.4412, longitude: -76.5123 },
   { id: "a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6", name: "Terpel La Casona", businessName: "Terpel", address: "Carrera 27T #103 - 38, Cali", latitude: 3.4125, longitude: -76.4856 },
@@ -122,7 +123,7 @@ const raw: Omit<GasStation, 'prices' | 'distanceKm'>[] = [
   { id: "b010000a-0000-4000-8000-00000000000a", name: "Full Gas Engativá Calle 80", businessName: "Full Gas", address: "Calle 80 # 91-40, Bogotá", latitude: 4.7055, longitude: -74.109 },
 ];
 
-function hashId(id: string): number {
+export function hashId(id: string): number {
   let h = 0;
   for (let i = 0; i < id.length; i++) {
     h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
@@ -130,18 +131,10 @@ function hashId(id: string): number {
   return Math.abs(h);
 }
 
-function pricesFromSeed(id: string): Prices {
+export function pricesFromSeed(id: string): Prices {
   const h = hashId(id);
   const corriente = 11720 + (h % 980);
   const extra = corriente + 1020 + (h % 220);
   const diesel = 9480 + (h % 920);
   return { corriente, extra, diesel };
 }
-
-/**
- * Mock: Cali + algunas en Bogotá (COP/galón simulados, estables por id).
- */
-export const gasStationsMock: GasStation[] = raw.map((s) => ({
-  ...s,
-  prices: pricesFromSeed(s.id),
-}));

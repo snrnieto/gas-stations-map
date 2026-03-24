@@ -4,6 +4,14 @@ export function formatDistanceKm(distanceKm: number): string {
   return `${distanceKm.toFixed(distanceKm < 10 ? 1 : 0)} km`;
 }
 
+export function formatHistoryDate(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
 export function formatCop(value: number): string {
   if (!Number.isFinite(value)) return '--';
   const rounded = Math.round(value);
