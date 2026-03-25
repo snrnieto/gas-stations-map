@@ -16,7 +16,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sebastian.gasstationsmap"
     },
     "android": {
       "package": "com.sebastian.gasstationsmap",
