@@ -17,7 +17,8 @@ Mapa mobile-first de estaciones de gasolina en Cali, Colombia.
 ## Ejecutar por entorno
 
 1. Instala dependencias:
-  - `npm install`
+
+- `npm install`
 
 ### Desarrollo (rápido, con Metro/Expo)
 
@@ -56,10 +57,13 @@ Para publicar en stores necesitas build firmada y proceso de distribución.
 
 - Android (APK/AAB firmada desde nativo):
   - `cd android && .\gradlew.bat assembleRelease` (Windows)
-- iOS (App Store/TestFlight):
   - abrir `ios/*.xcworkspace` en Xcode y generar `Archive` (Release)
 
 > Nota: para distribución profesional en ambos (sin abrir Android Studio/Xcode manualmente), se recomienda configurar EAS Build.
+
+- **Instalar el APK en un dispositivo por USB (ADB):** activa **Depuración USB** en el teléfono (Opciones de desarrollador), conecta el cable y comprueba con `adb devices` que aparezca como `device` (acepta la huella RSA si el teléfono lo pide).
+  - **Sin escribir la ruta del APK:** desde la raíz del repo, `cd android && .\gradlew.bat installRelease` (Windows) o `cd android && ./gradlew installRelease` (macOS/Linux). Compila si hace falta e instala en el dispositivo conectado.
+  - **Con `adb install`:** no hace falta la ruta absoluta del disco; basta una ruta relativa al directorio donde ejecutes el comando. Desde la raíz del proyecto: `adb install -r android\app\build\outputs\apk\release\app-release.apk` (Windows) o `adb install -r android/app/build/outputs/apk/release/app-release.apk` (macOS/Linux). O entra a esa carpeta y usa solo el nombre: `adb install -r app-release.apk`.
 
 ## Estructura (alto nivel)
 
@@ -78,4 +82,3 @@ Para publicar en stores necesitas build firmada y proceso de distribución.
 - Al abrir: carga ubicación y consulta estaciones cercanas (sin refetch por movimiento del mapa).
 - Botón “Buscar en esta zona”: usa el centro actual del mapa y recalcula con el servicio simulado.
 - Edición de precios: actualiza el estado global en memoria (sin persistencia real).
-
