@@ -33,8 +33,7 @@ export type GasStation = {
   prices: Prices;
   businessName?: string;
   /**
-   * Distancia calculada en el servicio (km) desde la ubicación solicitada.
-   * Usada principalmente para ordenar y mostrar en vista lista.
+   * km al punto de búsqueda; con Supabase suele venir de una RPC/vista espacial (p. ej. PostGIS).
    */
   distanceKm?: number;
 };

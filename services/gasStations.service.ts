@@ -1,91 +1,39 @@
-import { stationsMock, pricesFromSeed } from '../mock/gasStations';
-import {
-  getPriceHistoryForStation,
-  latestPriceByStationId,
-} from '../mock/stationPrices';
-import type {
-  FuelType,
-  GasStation,
-  GetGasStationsParams,
-  PriceHistoryEntry,
-  Prices,
-  StationRow,
-} from '../types/gasStation';
-import { haversineDistanceKm } from '../utils/haversine';
-
-function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((res) => setTimeout(res, ms));
-}
-
-function getPriceForFuelType(station: GasStation, fuelType: FuelType): number {
-  return station.prices[fuelType];
-}
+import { mockFetchNearbyGasStationsWithPrices, mockGetStationPriceHistory } from '../mock/gasStationsEndpoints';
+import type { GasStation, GetGasStationsParams, PriceHistoryEntry } from '../types/gasStation';
 
 /**
- * Une fila de estación + último snapshot de precios (simula una sola respuesta tipo vista/RPC en Supabase).
+ * Pide candidatas cercanas a Supabase (mock) y aplica filtros de precio y tope final en la app.
+ * `rowLimit` en la consulta es el máximo de filas espaciales; el slice final respeta `params.limit`.
  */
-function stationRowToGasStation(row: StationRow, latestById: Map<string, Prices>): GasStation {
-  const prices = latestById.get(row.id) ?? pricesFromSeed(row.id);
-  return {
-    ...row,
-    prices: { ...prices },
-  };
-}
-
-export async function getGasStations(
-  params: GetGasStationsParams,
-): Promise<GasStation[]> {
-  await delay(randomInt(500, 1000));
-
+export async function getGasStations(params: GetGasStationsParams): Promise<GasStation[]> {
   const radiusKm = params.radius ?? 8;
   const limit = Math.min(params.limit ?? 120, 150);
   const fuelType = params.fuelType;
   const minPrice = params.minPrice;
   const maxPrice = params.maxPrice;
 
-  const lat = params.lat;
-  const lng = params.lng;
+  const nearby = await mockFetchNearbyGasStationsWithPrices({
+    lat: params.lat,
+    lng: params.lng,
+    radiusKm,
+    rowLimit: 150,
+  });
 
-  const results = stationsMock
-    .map((station) => {
-      const distanceKm = haversineDistanceKm(
-        lat,
-        lng,
-        station.latitude,
-        station.longitude,
-      );
-      const withPrices = stationRowToGasStation(station, latestPriceByStationId);
-      return { ...withPrices, distanceKm };
-    })
-    .filter((station) => station.distanceKm !== undefined && station.distanceKm <= radiusKm)
+  return nearby
     .filter((station) => {
       if (minPrice === undefined && maxPrice === undefined) return true;
 
-      const selectedFuelType: FuelType = fuelType ?? 'corriente';
-      const selectedPrice = getPriceForFuelType(station, selectedFuelType);
+      const selectedFuelType = fuelType ?? 'corriente';
+      const selectedPrice = station.prices[selectedFuelType];
 
       if (minPrice !== undefined && selectedPrice < minPrice) return false;
       if (maxPrice !== undefined && selectedPrice > maxPrice) return false;
       return true;
     })
-    .sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0))
     .slice(0, limit);
-
-  return results;
 }
 
-/**
- * Simula GET /stations/:id/price-history — misma fuente que `stationPricesMock`.
- */
+/** Historial de precios por estación; reemplazar mock por consulta a `station_prices` en Supabase. */
 export async function getStationPriceHistory(stationId: string): Promise<PriceHistoryEntry[]> {
-  await delay(randomInt(350, 800));
-
-  return getPriceHistoryForStation(stationId).map((e) => ({
-    recordedAt: e.recordedAt,
-    prices: { ...e.prices },
-  }));
+  return mockGetStationPriceHistory(stationId);
 }
