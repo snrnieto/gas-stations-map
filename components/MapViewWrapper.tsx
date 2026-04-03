@@ -1,11 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InteractionManager, Text, View, useWindowDimensions } from 'react-native';
-import MapView, { Marker, type Region } from 'react-native-maps';
-import SuperCluster from 'supercluster';
-import type { FuelType, GasStation } from '../types/gasStation';
-import type { LatLng } from '../store/useGasStationsStore';
-import { useGasStationsStore } from '../store/useGasStationsStore';
-import { formatCop } from '../utils/format';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  InteractionManager,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import MapView, { Marker, type Region } from "react-native-maps";
+import SuperCluster from "supercluster";
+import type { FuelType, GasStation } from "../types/gasStation";
+import type { LatLng } from "../store/useGasStationsStore";
+import { useGasStationsStore } from "../store/useGasStationsStore";
+import { formatCop } from "../utils/format";
 
 type Props = {
   userLocation: LatLng;
@@ -16,10 +21,10 @@ type Props = {
   bottomInset?: number;
 };
 
-type PointGeometry = { type: 'Point'; coordinates: [number, number] };
+type PointGeometry = { type: "Point"; coordinates: [number, number] };
 
 type StationPointFeature = {
-  type: 'Feature';
+  type: "Feature";
   properties: { station: GasStation };
   geometry: PointGeometry;
 };
@@ -33,7 +38,9 @@ type ClusterProperties = {
 
 function regionToBoundingBox(region: Region): [number, number, number, number] {
   const lngD =
-    region.longitudeDelta < 0 ? region.longitudeDelta + 360 : region.longitudeDelta;
+    region.longitudeDelta < 0
+      ? region.longitudeDelta + 360
+      : region.longitudeDelta;
   return [
     region.longitude - lngD,
     region.latitude - region.latitudeDelta,
@@ -47,10 +54,17 @@ function regionToBoundingBox(region: Region): [number, number, number, number] {
  * longitudeDelta/width y latitudeDelta/height para fijar el encuadre (SO #50882700).
  * Los bordes visibles son centro ± delta en cada eje.
  */
-function regionToClusterZoom(region: Region, mapW: number, mapH: number): number {
+function regionToClusterZoom(
+  region: Region,
+  mapW: number,
+  mapH: number,
+): number {
   if (mapW <= 0 || mapH <= 0) return 0;
 
-  let lngHalf = region.longitudeDelta < 0 ? region.longitudeDelta + 360 : region.longitudeDelta;
+  let lngHalf =
+    region.longitudeDelta < 0
+      ? region.longitudeDelta + 360
+      : region.longitudeDelta;
   lngHalf = Math.abs(lngHalf);
   const latHalf = Math.abs(region.latitudeDelta);
 
@@ -76,12 +90,18 @@ function clampClusterZoom(z: number): number {
 }
 
 function isClusterFeature(
-  f: StationPointFeature | { type: 'Feature'; properties: unknown; geometry: PointGeometry },
-): f is { type: 'Feature'; properties: ClusterProperties; geometry: PointGeometry } {
+  f:
+    | StationPointFeature
+    | { type: "Feature"; properties: unknown; geometry: PointGeometry },
+): f is {
+  type: "Feature";
+  properties: ClusterProperties;
+  geometry: PointGeometry;
+} {
   return (
     f.properties !== null &&
-    typeof f.properties === 'object' &&
-    'cluster' in f.properties &&
+    typeof f.properties === "object" &&
+    "cluster" in f.properties &&
     (f.properties as { cluster?: boolean }).cluster === true
   );
 }
@@ -132,10 +152,10 @@ export function MapViewWrapper({
 
   const points = useMemo((): StationPointFeature[] => {
     return stations.map((station) => ({
-      type: 'Feature',
+      type: "Feature",
       properties: { station },
       geometry: {
-        type: 'Point',
+        type: "Point",
         coordinates: [station.longitude, station.latitude],
       },
     }));
@@ -176,7 +196,7 @@ export function MapViewWrapper({
             ? `c${f.properties.cluster_id}`
             : `s${(f.properties as { station: GasStation }).station.id}`,
         )
-        .join('|'),
+        .join("|"),
     [clusters],
   );
 
@@ -211,7 +231,10 @@ export function MapViewWrapper({
 
   const { cheapestIds, expensiveIds } = useMemo(() => {
     const pricedStations = stations
-      .map((station) => ({ id: station.id, price: station.prices[selectedFuelType] }))
+      .map((station) => ({
+        id: station.id,
+        price: station.prices[selectedFuelType],
+      }))
       .filter((item) => Number.isFinite(item.price));
 
     const byLow = [...pricedStations].sort((a, b) => a.price - b.price);
@@ -239,7 +262,10 @@ export function MapViewWrapper({
       const map = mapRef.current;
       if (!index || !map) return;
 
-      let leaves: Array<{ geometry: PointGeometry; properties: Record<string, unknown> | null }>;
+      let leaves: Array<{
+        geometry: PointGeometry;
+        properties: Record<string, unknown> | null;
+      }>;
       try {
         leaves = index.getLeaves(clusterId, 500, 0);
       } catch {
@@ -273,7 +299,7 @@ export function MapViewWrapper({
       }}
       initialRegion={initialRegion}
       showsUserLocation
-      showsMyLocationButton
+      showsMyLocationButton={false}
       toolbarEnabled={false}
       onMapReady={() => setIsMapReady(true)}
       mapPadding={{
@@ -284,7 +310,10 @@ export function MapViewWrapper({
       }}
       onRegionChangeComplete={(region: Region) => {
         setMapRegion(region);
-        setMapCenter({ lat: region.latitude, lng: region.longitude }, userPanningRef.current);
+        setMapCenter(
+          { lat: region.latitude, lng: region.longitude },
+          userPanningRef.current,
+        );
       }}
       onPanDrag={() => {
         userPanningRef.current = true;
@@ -296,7 +325,9 @@ export function MapViewWrapper({
         if (isClusterFeature(feature)) {
           const abbrev = feature.properties.point_count_abbreviated;
           const count =
-            typeof abbrev === 'string' || typeof abbrev === 'number' ? String(abbrev) : '?';
+            typeof abbrev === "string" || typeof abbrev === "number"
+              ? String(abbrev)
+              : "?";
           return (
             <Marker
               key={`cluster-${feature.properties.cluster_id}`}
@@ -318,10 +349,10 @@ export function MapViewWrapper({
         const isMostExpensive = expensiveIds.has(station.id);
 
         const markerColorClass = isCheapest
-          ? 'bg-emerald-500'
+          ? "bg-emerald-500"
           : isMostExpensive
-            ? 'bg-red-500'
-            : 'bg-blue-500';
+            ? "bg-red-500"
+            : "bg-blue-500";
 
         const priceLabel = formatCop(price);
 
@@ -337,11 +368,16 @@ export function MapViewWrapper({
           >
             <View
               className={`${markerColorClass} px-3 py-1.5 rounded-full border border-white`}
-              style={{ minHeight: 30, justifyContent: 'center' }}
+              style={{ minHeight: 30, justifyContent: "center" }}
             >
               <Text
                 className="font-bold"
-                style={{ color: '#ffffff', fontSize: 12, lineHeight: 16, fontWeight: '700' }}
+                style={{
+                  color: "#ffffff",
+                  fontSize: 12,
+                  lineHeight: 16,
+                  fontWeight: "700",
+                }}
               >
                 {priceLabel}
               </Text>

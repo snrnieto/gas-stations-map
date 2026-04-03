@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useBannerBottomInset } from '../hooks/useBannerBottomInset';
 import { MapViewWrapper } from '../components/MapViewWrapper';
@@ -29,6 +30,7 @@ export default function HomeScreen() {
   const selectStation = useGasStationsStore((s) => s.selectStation);
   const setViewMode = useGasStationsStore((s) => s.setViewMode);
   const setSearchCenter = useGasStationsStore((s) => s.setSearchCenter);
+  const setMapFocusTarget = useGasStationsStore((s) => s.setMapFocusTarget);
   const setFuelTypeFilter = useGasStationsStore((s) => s.setFuelTypeFilter);
   const setOrderBy = useGasStationsStore((s) => s.setOrderBy);
   const setPriceRangeFilter = useGasStationsStore((s) => s.setPriceRangeFilter);
@@ -374,6 +376,18 @@ export default function HomeScreen() {
                   className="bg-white rounded-full h-12 w-12 items-center justify-center border border-neutral-200"
                 >
                   <Text className="text-neutral-900 text-2xl font-bold leading-none">↻</Text>
+                </Pressable>
+              </View>
+            )}
+            {canRenderMap && userLocation && (
+              <View className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Pressable
+                  onPress={() => setMapFocusTarget(userLocation)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Ir a mi ubicación"
+                  className="bg-white rounded-full h-12 w-12 items-center justify-center border border-neutral-200"
+                >
+                  <Ionicons name="locate" size={22} color="#171717" />
                 </Pressable>
               </View>
             )}
