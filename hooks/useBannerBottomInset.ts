@@ -1,7 +1,7 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FALLBACK_BANNER_HEIGHT } from "../constants/ads";
+import { useBannerAdLayoutStore } from "../store/useBannerAdLayoutStore";
 
 function getGoogleMobileAdsModule():
   | {
@@ -18,8 +18,8 @@ function getGoogleMobileAdsModule():
 }
 
 /**
- * Distancia desde el borde inferior de la pantalla hasta donde debe terminar el contenido
- * (safe area + banner si está activo). Misma lógica que `app/_layout.tsx`.
+ * Distancia desde el borde inferior hasta donde debe terminar el contenido:
+ * safe area + altura real del banner solo si el anuncio cargó (`useBannerAdLayoutStore`).
  */
 export function useBannerBottomInset(): number {
   const insets = useSafeAreaInsets();
@@ -31,11 +31,12 @@ export function useBannerBottomInset(): number {
       ? (extra.admobAndroidBannerUnitId as string | undefined) || fallbackBannerId
       : (extra.admobIosBannerUnitId as string | undefined) || fallbackBannerId;
   const canRenderBanner = !!googleMobileAds?.BannerAd && !!googleMobileAds?.BannerAdSize;
-  const shouldShowBanner = canRenderBanner && typeof adUnitId === "string" && adUnitId.length > 0;
+  const configWantsBanner = canRenderBanner && typeof adUnitId === "string" && adUnitId.length > 0;
+  const bannerStatus = useBannerAdLayoutStore((s) => s.status);
+  const bannerHeightPx = useBannerAdLayoutStore((s) => s.heightPx);
   const bannerBottom = Math.max(insets.bottom, 8);
-  const bannerHeight =
-    Number(extra.admobBannerHeight ?? FALLBACK_BANNER_HEIGHT) || FALLBACK_BANNER_HEIGHT;
 
-  if (!shouldShowBanner) return insets.bottom;
-  return bannerBottom + bannerHeight;
+  if (!configWantsBanner) return insets.bottom;
+  if (bannerStatus !== "loaded" || bannerHeightPx <= 0) return insets.bottom;
+  return bannerBottom + bannerHeightPx;
 }

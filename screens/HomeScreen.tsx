@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import Constants from 'expo-constants';
+import { useBannerBottomInset } from '../hooks/useBannerBottomInset';
 import { MapViewWrapper } from '../components/MapViewWrapper';
 import { GasStationCard } from '../components/GasStationCard';
 import { StationDetailSheet } from '../components/StationDetailSheet';
@@ -11,16 +12,13 @@ import type { FuelType } from '../types/gasStation';
 import { haversineDistanceKm } from '../utils/haversine';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatCop } from '../utils/format';
-import { FALLBACK_BANNER_HEIGHT } from '../constants/ads';
-
 export default function HomeScreen() {
   const { userLocationStatus } = useUserLocation();
   const { stations, stationsStatus, stationsError, refetch } = useStationsQuery();
 
   const insets = useSafeAreaInsets();
-  const adBannerHeight = Number(Constants.expoConfig?.extra?.admobBannerHeight ?? FALLBACK_BANNER_HEIGHT);
-  const effectiveBottomInset = insets.bottom + (Number.isFinite(adBannerHeight) ? adBannerHeight : 0);
-  const floatingButtonsBottom = Math.max(effectiveBottomInset, 10) + 28;
+  const contentBottomInset = useBannerBottomInset();
+  const floatingButtonsBottom = Math.max(contentBottomInset, 10) + 28;
 
   const userLocation = useGasStationsStore((s) => s.userLocation);
   const viewMode = useGasStationsStore((s) => s.viewMode);
@@ -158,7 +156,7 @@ export default function HomeScreen() {
               onStationPress={(id) => selectStation(id)}
               selectedFuelType={selectedFuelType}
               topInset={insets.top}
-              bottomInset={effectiveBottomInset}
+              bottomInset={contentBottomInset}
             />
           ) : (
             <View className="flex-1 items-center justify-center">
@@ -250,7 +248,7 @@ export default function HomeScreen() {
           <FlatList
             data={sortedStations}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={{ padding: 16, paddingBottom: 110 + effectiveBottomInset }}
+            contentContainerStyle={{ padding: 16, paddingBottom: 110 + contentBottomInset }}
             ListEmptyComponent={
               <View className="py-10 items-center">
                 <Text className="text-neutral-700">Sin resultados</Text>

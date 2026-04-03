@@ -9,7 +9,7 @@ import { Platform, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FALLBACK_BANNER_HEIGHT } from '../constants/ads';
+import { useBannerAdLayoutStore } from '../store/useBannerAdLayoutStore';
 
 export default function RootLayout() {
   return (
@@ -46,14 +46,22 @@ function RootNavigator() {
   const canRenderBanner = !!googleMobileAds?.BannerAd && !!googleMobileAds?.BannerAdSize;
   const shouldShowBanner = canRenderBanner && typeof adUnitId === 'string' && adUnitId.length > 0;
   const bannerBottom = Math.max(insets.bottom, 8);
-  const bannerHeight = Number(extra.admobBannerHeight ?? FALLBACK_BANNER_HEIGHT) || FALLBACK_BANNER_HEIGHT;
+  const bannerLayoutStatus = useBannerAdLayoutStore((s) => s.status);
+  const bannerHeightPx = useBannerAdLayoutStore((s) => s.heightPx);
+  const setBannerLoaded = useBannerAdLayoutStore((s) => s.setLoaded);
+  const setBannerFailed = useBannerAdLayoutStore((s) => s.setFailed);
+  const resetBannerLayout = useBannerAdLayoutStore((s) => s.reset);
+
+  useEffect(() => {
+    if (!shouldShowBanner) resetBannerLayout();
+  }, [shouldShowBanner, resetBannerLayout]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false }} />
-        {shouldShowBanner && (
+        {shouldShowBanner && bannerLayoutStatus !== 'failed' && (
           <View
             pointerEvents="box-none"
             style={{
@@ -61,14 +69,19 @@ function RootNavigator() {
               left: 0,
               right: 0,
               bottom: bannerBottom,
-              minHeight: bannerHeight,
+              height: bannerLayoutStatus === 'loaded' && bannerHeightPx > 0 ? bannerHeightPx : 0,
+              overflow: 'hidden',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'flex-end',
             }}
           >
             <googleMobileAds.BannerAd
+              key={adUnitId}
               unitId={adUnitId}
               size={googleMobileAds.BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+              onAdLoaded={({ height }: { width: number; height: number }) => setBannerLoaded(height)}
+              onSizeChange={({ height }: { width: number; height: number }) => setBannerLoaded(height)}
+              onAdFailedToLoad={() => setBannerFailed()}
             />
           </View>
         )}
