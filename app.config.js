@@ -27,6 +27,8 @@ function readEnvLocal() {
 const localEnv = readEnvLocal();
 const googleMapsAndroidApiKey =
   process.env.GOOGLE_MAPS_ANDROID_API_KEY || localEnv.GOOGLE_MAPS_ANDROID_API_KEY || '';
+const googleMapsIosApiKey =
+  process.env.GOOGLE_MAPS_IOS_API_KEY || localEnv.GOOGLE_MAPS_IOS_API_KEY || '';
 const admobAndroidAppId =
   process.env.ADMOB_ANDROID_APP_ID ||
   localEnv.ADMOB_ANDROID_APP_ID ||
@@ -55,6 +57,7 @@ if (!hasReactNativeMapsPlugin) {
     'react-native-maps',
     {
       androidGoogleMapsApiKey: googleMapsAndroidApiKey,
+      iosGoogleMapsApiKey: googleMapsIosApiKey,
     },
   ]);
 }
@@ -92,6 +95,7 @@ module.exports = {
     extra: {
       ...(appJson.expo.extra || {}),
       googleMapsAndroidApiKey,
+      googleMapsIosApiKey,
       admobAndroidBannerUnitId,
       admobIosBannerUnitId,
       admobBannerHeight,

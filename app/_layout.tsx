@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
 import '../global.css';
 
+import { useEffect } from 'react';
 import Constants from 'expo-constants';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -22,6 +23,21 @@ function RootNavigator() {
   const insets = useSafeAreaInsets();
   const extra = Constants.expoConfig?.extra || {};
   const googleMobileAds = getGoogleMobileAdsModule();
+
+  useEffect(() => {
+    if (!googleMobileAds?.default) return;
+    const mobileAds = googleMobileAds.default();
+    (async () => {
+      try {
+        if (__DEV__) {
+          await mobileAds.setRequestConfiguration({ testDeviceIdentifiers: ['EMULATOR'] });
+        }
+        await mobileAds.initialize();
+      } catch (e) {
+        if (__DEV__) console.warn('[AdMob] initialize failed', e);
+      }
+    })();
+  }, [googleMobileAds]);
   const fallbackBannerId = __DEV__ ? googleMobileAds?.TestIds?.BANNER : undefined;
   const adUnitId =
     Platform.OS === 'android'
@@ -63,6 +79,12 @@ function RootNavigator() {
 
 function getGoogleMobileAdsModule():
   | {
+      default: () => {
+        initialize: () => Promise<unknown>;
+        setRequestConfiguration: (config: {
+          testDeviceIdentifiers?: string[];
+        }) => Promise<void>;
+      };
       BannerAd: any;
       BannerAdSize: Record<string, string>;
       TestIds?: Record<string, string>;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import Constants from 'expo-constants';
 import { MapViewWrapper } from '../components/MapViewWrapper';
 import { GasStationCard } from '../components/GasStationCard';
@@ -115,10 +115,11 @@ export default function HomeScreen() {
   const showEmpty = stationsStatus === 'empty';
   const showError = stationsStatus === 'error';
 
-  // En Android, react-native-maps requiere Google Maps API key para inicializarse.
   const googleMapsAndroidApiKey: string | undefined =
     Constants.expoConfig?.extra?.googleMapsAndroidApiKey;
-  const canRenderMap = !!googleMapsAndroidApiKey;
+  const googleMapsIosApiKey: string | undefined = Constants.expoConfig?.extra?.googleMapsIosApiKey;
+  const canRenderMap =
+    Platform.OS === 'ios' ? !!googleMapsIosApiKey : !!googleMapsAndroidApiKey;
   const applyPriceRange = () => {
     const minPrice = minPriceDraft.trim() === '' ? undefined : Number(minPriceDraft);
     const maxPrice = maxPriceDraft.trim() === '' ? undefined : Number(maxPriceDraft);
@@ -171,7 +172,9 @@ export default function HomeScreen() {
               Configuración de mapa incompleta
             </Text>
             <Text className="text-neutral-600 mt-2 text-center">
-              Agrega `GOOGLE_MAPS_ANDROID_API_KEY` en `.env.local`.
+              {Platform.OS === 'ios'
+                ? 'Agrega `GOOGLE_MAPS_IOS_API_KEY` en `.env.local` y vuelve a generar el proyecto nativo (`npx expo prebuild --clean` o `npx expo run:ios`).'
+                : 'Agrega `GOOGLE_MAPS_ANDROID_API_KEY` en `.env.local`.'}
             </Text>
             <Pressable
               onPress={() => setViewMode('list')}
