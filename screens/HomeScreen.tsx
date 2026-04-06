@@ -9,7 +9,7 @@ import { StationDetailSheet } from '../components/StationDetailSheet';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useStationsQuery } from '../hooks/useStationsQuery';
 import { useGasStationsStore } from '../store/useGasStationsStore';
-import type { FuelType } from '../types/gasStation';
+import { type FuelType, gasStationCorePrice } from '../types/gasStation';
 import { haversineDistanceKm } from '../utils/haversine';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatCop } from '../utils/format';
@@ -64,7 +64,7 @@ export default function HomeScreen() {
   const minPriceForHighlight = useMemo(() => {
     if (stations.length === 0) return undefined;
     const prices = stations
-      .map((s) => s.prices[selectedFuelType])
+      .map((s) => gasStationCorePrice(s, selectedFuelType))
       .filter((p) => Number.isFinite(p));
     if (prices.length === 0) return undefined;
     return Math.min(...prices);
@@ -75,13 +75,9 @@ export default function HomeScreen() {
       if (!userLocation) return station;
       return {
         ...station,
-        // La lista debe ordenar/mostrar distancia respecto a la ubicación actual del usuario.
-        distanceKm: haversineDistanceKm(
-          userLocation.lat,
-          userLocation.lng,
-          station.latitude,
-          station.longitude,
-        ),
+        // La lista debe ordenar/mostrar distancia respecto a la ubicación actual del usuario (metros).
+        distance:
+          haversineDistanceKm(userLocation.lat, userLocation.lng, station.lat, station.lng) * 1000,
       };
     });
   }, [stations, userLocation]);
@@ -90,12 +86,12 @@ export default function HomeScreen() {
     const list = [...stationsWithCurrentDistance];
 
     if (sortMode === 'distanceAsc') {
-      list.sort((a, b) => (a.distanceKm ?? Number.POSITIVE_INFINITY) - (b.distanceKm ?? Number.POSITIVE_INFINITY));
+      list.sort((a, b) => a.distance - b.distance);
       return list;
     }
 
     if (sortMode === 'distanceDesc') {
-      list.sort((a, b) => (b.distanceKm ?? Number.NEGATIVE_INFINITY) - (a.distanceKm ?? Number.NEGATIVE_INFINITY));
+      list.sort((a, b) => b.distance - a.distance);
       return list;
     }
 
@@ -107,7 +103,7 @@ export default function HomeScreen() {
     return list;
 
     function getPriceForStation(station: (typeof stationsWithCurrentDistance)[number]): number {
-      return station.prices[selectedFuelType] ?? Number.POSITIVE_INFINITY;
+      return gasStationCorePrice(station, selectedFuelType);
     }
   }, [selectedFuelType, sortMode, stationsWithCurrentDistance]);
 
@@ -195,7 +191,7 @@ export default function HomeScreen() {
               {(
                 [
                   { label: 'Regular', value: 'corriente' as FuelType },
-                  { label: 'Premium', value: 'extra' as FuelType },
+                  { label: 'Premium', value: 'premium' as FuelType },
                   { label: 'Diesel', value: 'diesel' as FuelType },
                 ] as const
               ).map((option) => {
@@ -257,7 +253,7 @@ export default function HomeScreen() {
               </View>
             }
             renderItem={({ item }) => {
-              const price = item.prices[selectedFuelType];
+              const price = gasStationCorePrice(item, selectedFuelType);
               const highlighted =
                 minPriceForHighlight !== undefined && Number.isFinite(price)
                   ? price === minPriceForHighlight
@@ -329,7 +325,7 @@ export default function HomeScreen() {
             {(
               [
                 { label: 'Regular', value: 'corriente' as FuelType },
-                { label: 'Premium', value: 'extra' as FuelType },
+                { label: 'Premium', value: 'premium' as FuelType },
                 { label: 'Diesel', value: 'diesel' as FuelType },
               ] as const
             ).map((option) => {

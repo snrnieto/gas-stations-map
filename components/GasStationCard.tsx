@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
-import type { FuelType, GasStation } from '../types/gasStation';
+import { type FuelType, type GasStation, gasStationCorePrice } from '../types/gasStation';
 import { formatCop, formatDistanceKm } from '../utils/format';
 
 type Props = {
@@ -10,7 +10,7 @@ type Props = {
 };
 
 export function GasStationCard({ station, fuelType, onPress, highlighted }: Props) {
-  const price = station.prices[fuelType];
+  const price = gasStationCorePrice(station, fuelType);
 
   return (
     <Pressable
@@ -22,12 +22,12 @@ export function GasStationCard({ station, fuelType, onPress, highlighted }: Prop
     >
       <Text className="font-semibold text-neutral-900">{station.name}</Text>
       <Text className="text-neutral-600 mt-1" numberOfLines={2}>
-        {station.address}
+        {station.business_name}
       </Text>
       <View className="flex-row justify-between items-end mt-3">
         <Text className="font-semibold text-neutral-900">{formatCop(price)}</Text>
         <Text className="text-neutral-500 text-sm">
-          {formatDistanceKm(station.distanceKm ?? NaN)}
+          {formatDistanceKm(station.distance / 1000)}
         </Text>
       </View>
     </Pressable>

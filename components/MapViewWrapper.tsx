@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import MapView, { Marker, type Region } from "react-native-maps";
 import SuperCluster from "supercluster";
-import type { FuelType, GasStation } from "../types/gasStation";
+import { type FuelType, type GasStation, gasStationCorePrice } from "../types/gasStation";
 import type { LatLng } from "../store/useGasStationsStore";
 import { useGasStationsStore } from "../store/useGasStationsStore";
 import { formatCop } from "../utils/format";
@@ -156,7 +156,7 @@ export function MapViewWrapper({
       properties: { station },
       geometry: {
         type: "Point",
-        coordinates: [station.longitude, station.latitude],
+        coordinates: [station.lng, station.lat],
       },
     }));
   }, [stations]);
@@ -233,7 +233,7 @@ export function MapViewWrapper({
     const pricedStations = stations
       .map((station) => ({
         id: station.id,
-        price: station.prices[selectedFuelType],
+        price: gasStationCorePrice(station, selectedFuelType),
       }))
       .filter((item) => Number.isFinite(item.price));
 
@@ -344,7 +344,7 @@ export function MapViewWrapper({
         }
 
         const station = (feature.properties as { station: GasStation }).station;
-        const price = station.prices[selectedFuelType];
+        const price = gasStationCorePrice(station, selectedFuelType);
         const isCheapest = cheapestIds.has(station.id);
         const isMostExpensive = expensiveIds.has(station.id);
 

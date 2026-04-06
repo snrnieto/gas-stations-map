@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { FuelType, GasStation, Prices } from '../types/gasStation';
+import type { FuelType, GasStation, Prices } from "../types/gasStation";
 
 export type LatLng = { lat: number; lng: number };
 export type ViewMode = 'map' | 'list';
@@ -152,7 +152,14 @@ export const useGasStationsStore = create<GasStationsState>()((set, get) => ({
       },
       // Actualizamos la lista visible para que el usuario vea el cambio inmediatamente.
       stations: state.stations.map((st) =>
-        st.id === stationId ? { ...st, prices: { ...st.prices, ...prices } } : st,
+        st.id === stationId
+          ? {
+              ...st,
+              current_corriente: prices.corriente,
+              current_premium: prices.premium,
+              current_diesel: prices.diesel,
+            }
+          : st,
       ),
     })),
 

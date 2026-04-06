@@ -11,7 +11,7 @@ type Props = {
 
 export function StationEditForm({ stationId, initialPrices, onCancel }: Props) {
   const [corriente, setCorriente] = useState(String(initialPrices.corriente));
-  const [extra, setExtra] = useState(String(initialPrices.extra));
+  const [premium, setPremium] = useState(String(initialPrices.premium));
   const [diesel, setDiesel] = useState(String(initialPrices.diesel));
 
   const applyEditedPrices = useGasStationsStore((s) => s.applyEditedPrices);
@@ -20,10 +20,10 @@ export function StationEditForm({ stationId, initialPrices, onCancel }: Props) {
     () =>
       [
         { label: 'Corriente', value: corriente, onChange: setCorriente, key: 'corriente' as const },
-        { label: 'Extra', value: extra, onChange: setExtra, key: 'extra' as const },
+        { label: 'Premium', value: premium, onChange: setPremium, key: 'premium' as const },
         { label: 'Diesel', value: diesel, onChange: setDiesel, key: 'diesel' as const },
       ] as const,
-    [corriente, diesel, extra],
+    [corriente, diesel, premium],
   );
 
   const onSave = () => {
@@ -34,7 +34,7 @@ export function StationEditForm({ stationId, initialPrices, onCancel }: Props) {
 
     const nextPrices: Prices = {
       corriente: parseOrFallback(corriente, initialPrices.corriente),
-      extra: parseOrFallback(extra, initialPrices.extra),
+      premium: parseOrFallback(premium, initialPrices.premium),
       diesel: parseOrFallback(diesel, initialPrices.diesel),
     };
 

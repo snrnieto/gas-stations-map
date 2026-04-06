@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { getGasStations } from "../services/gasStations.service";
 import { useGasStationsStore, type LatLng } from "../store/useGasStationsStore";
+import { gasStationCorePrice } from "../types/gasStation";
 
 const DEFAULT_LIMIT = 140;
 // El dataset mock cubre Cali y alrededores, pero el filtro por radio era muy estricto (8km),
@@ -26,7 +27,12 @@ export function useStationsQuery() {
       return baseStations.map((st) => {
         const edited = editedPricesById[st.id];
         if (!edited) return st;
-        return { ...st, prices: { ...st.prices, ...edited } };
+        return {
+          ...st,
+          current_corriente: edited.corriente,
+          current_premium: edited.premium,
+          current_diesel: edited.diesel,
+        };
       });
     },
     [editedPricesById],
@@ -69,7 +75,7 @@ export function useStationsQuery() {
   const filteredStations = useMemo(() => {
     return stations.filter((station) => {
       const selectedFuelType = filters.fuelType ?? "corriente";
-      const selectedPrice = station.prices[selectedFuelType];
+      const selectedPrice = gasStationCorePrice(station, selectedFuelType);
 
       if (filters.minPrice !== undefined && selectedPrice < filters.minPrice) return false;
       if (filters.maxPrice !== undefined && selectedPrice > filters.maxPrice) return false;

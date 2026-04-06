@@ -29,7 +29,7 @@ export function FilterBar({ onClose }: Props) {
       [
         { label: 'Todas', value: undefined as FuelType | undefined },
         { label: 'Corriente', value: 'corriente' as FuelType },
-        { label: 'Extra', value: 'extra' as FuelType },
+        { label: 'Premium', value: 'premium' as FuelType },
         { label: 'Diesel', value: 'diesel' as FuelType },
       ] as const,
     [],

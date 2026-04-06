@@ -19,8 +19,9 @@ import type { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescrip
 import { useGasStationsStore } from "../store/useGasStationsStore";
 import { useBannerBottomInset } from "../hooks/useBannerBottomInset";
 import { useStationPriceHistory } from "../hooks/useStationPriceHistory";
-import { formatCop, formatHistoryDate } from "../utils/format";
+import { formatCop, formatHistoryDate, formatPricesJsonSummary, fuelDisplayLabel } from "../utils/format";
 import { StationEditForm } from "./StationEditForm";
+import { corePricesFromGasStation } from "../types/gasStation";
 
 export function StationDetailSheet() {
   const { height: windowHeight } = useWindowDimensions();
@@ -138,12 +139,12 @@ export function StationDetailSheet() {
 
   const openDirections = () => {
     if (!selectedStation) return;
-    const { latitude, longitude, name } = selectedStation;
+    const { lat, lng, name } = selectedStation;
 
     const url =
       Platform.OS === "ios"
-        ? `maps:${latitude},${longitude}?q=${encodeURIComponent(name)}`
-        : `geo:${latitude},${longitude}?q=${latitude},${longitude}(${encodeURIComponent(name)})`;
+        ? `maps:${lat},${lng}?q=${encodeURIComponent(name)}`
+        : `geo:${lat},${lng}?q=${lat},${lng}(${encodeURIComponent(name)})`;
 
     Linking.openURL(url).catch(() => {});
   };
@@ -151,8 +152,8 @@ export function StationDetailSheet() {
   const openInAppMap = () => {
     if (!selectedStation) return;
     setMapFocusTarget({
-      lat: selectedStation.latitude,
-      lng: selectedStation.longitude,
+      lat: selectedStation.lat,
+      lng: selectedStation.lng,
     });
     setViewMode("map");
     setIsEditing(false);
@@ -191,7 +192,7 @@ export function StationDetailSheet() {
           >
             <StationEditForm
               stationId={selectedStation.id}
-              initialPrices={selectedStation.prices}
+              initialPrices={corePricesFromGasStation(selectedStation)}
               onCancel={() => setIsEditing(false)}
             />
           </BottomSheetScrollView>
@@ -203,8 +204,13 @@ export function StationDetailSheet() {
             <>
               <Text className="text-neutral-900 font-bold text-lg">{selectedStation.name}</Text>
               <Text className="text-neutral-600 mt-1" numberOfLines={2}>
-                {selectedStation.address}
+                {selectedStation.business_name}
               </Text>
+              {selectedStation.address.trim().length > 0 && (
+                <Text className="text-neutral-500 text-sm mt-2 leading-5" numberOfLines={3}>
+                  {selectedStation.address}
+                </Text>
+              )}
 
               <View className="mt-4 bg-neutral-50 border border-neutral-200 rounded-2xl p-3">
                 <Text className="text-neutral-800 font-semibold mb-2">Precios</Text>
@@ -212,21 +218,31 @@ export function StationDetailSheet() {
                   <View className="flex-row justify-between">
                     <Text className="text-neutral-600 font-semibold">Corriente</Text>
                     <Text className="text-neutral-900 font-bold">
-                      {formatCop(selectedStation.prices.corriente)}
+                      {formatCop(selectedStation.current_corriente)}
                     </Text>
                   </View>
                   <View className="flex-row justify-between">
-                    <Text className="text-neutral-600 font-semibold">Extra</Text>
+                    <Text className="text-neutral-600 font-semibold">Premium</Text>
                     <Text className="text-neutral-900 font-bold">
-                      {formatCop(selectedStation.prices.extra)}
+                      {formatCop(selectedStation.current_premium)}
                     </Text>
                   </View>
                   <View className="flex-row justify-between">
                     <Text className="text-neutral-600 font-semibold">Diesel</Text>
                     <Text className="text-neutral-900 font-bold">
-                      {formatCop(selectedStation.prices.diesel)}
+                      {formatCop(selectedStation.current_diesel)}
                     </Text>
                   </View>
+                  {Object.keys(selectedStation.current_prices_extra).length > 0 && (
+                    <>
+                      {Object.entries(selectedStation.current_prices_extra).map(([key, value]) => (
+                        <View key={key} className="flex-row justify-between">
+                          <Text className="text-neutral-600 font-semibold">{fuelDisplayLabel(key)}</Text>
+                          <Text className="text-neutral-900 font-bold">{formatCop(value)}</Text>
+                        </View>
+                      ))}
+                    </>
+                  )}
                 </View>
               </View>
 
@@ -306,15 +322,14 @@ export function StationDetailSheet() {
                       <View className="pt-2">
                         {priceHistory.map((row, index) => (
                           <View
-                            key={row.recordedAt}
+                            key={row.id}
                             className={index > 0 ? "mt-3 pt-3 border-t border-neutral-200" : ""}
                           >
                             <Text className="text-neutral-900 font-semibold text-sm">
-                              {formatHistoryDate(row.recordedAt)}
+                              {formatHistoryDate(row.created_at)}
                             </Text>
                             <Text className="text-neutral-600 text-xs mt-1 leading-5">
-                              Corriente {formatCop(row.prices.corriente)} · Extra{" "}
-                              {formatCop(row.prices.extra)} · Diesel {formatCop(row.prices.diesel)}
+                              {formatPricesJsonSummary(row.prices_json)}
                             </Text>
                           </View>
                         ))}

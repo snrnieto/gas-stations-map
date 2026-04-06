@@ -1,5 +1,10 @@
 import { mockFetchNearbyGasStationsWithPrices, mockGetStationPriceHistory } from '../mock/gasStationsEndpoints';
-import type { GasStation, GetGasStationsParams, PriceHistoryEntry } from '../types/gasStation';
+import {
+  type GasStation,
+  type GetGasStationsParams,
+  gasStationCorePrice,
+  type PriceHistoryEntry,
+} from '../types/gasStation';
 
 /**
  * Pide candidatas cercanas a Supabase (mock) y aplica filtros de precio y tope final en la app.
@@ -24,7 +29,7 @@ export async function getGasStations(params: GetGasStationsParams): Promise<GasS
       if (minPrice === undefined && maxPrice === undefined) return true;
 
       const selectedFuelType = fuelType ?? 'corriente';
-      const selectedPrice = station.prices[selectedFuelType];
+      const selectedPrice = gasStationCorePrice(station, selectedFuelType);
 
       if (minPrice !== undefined && selectedPrice < minPrice) return false;
       if (maxPrice !== undefined && selectedPrice > maxPrice) return false;
@@ -33,7 +38,7 @@ export async function getGasStations(params: GetGasStationsParams): Promise<GasS
     .slice(0, limit);
 }
 
-/** Historial de precios por estación; reemplazar mock por consulta a `station_prices` en Supabase. */
+/** Historial de precios por estación; reemplazar mock por consulta a la tabla de snapshots en Supabase. */
 export async function getStationPriceHistory(stationId: string): Promise<PriceHistoryEntry[]> {
   return mockGetStationPriceHistory(stationId);
 }
