@@ -10,7 +10,6 @@ import { useUserLocation } from '../hooks/useUserLocation';
 import { useStationsQuery } from '../hooks/useStationsQuery';
 import { useGasStationsStore } from '../store/useGasStationsStore';
 import { type FuelType, gasStationCorePrice } from '../types/gasStation';
-import { haversineDistanceKm } from '../utils/haversine';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatCop } from '../utils/format';
 export default function HomeScreen() {
@@ -70,20 +69,8 @@ export default function HomeScreen() {
     return Math.min(...prices);
   }, [selectedFuelType, stations]);
 
-  const stationsWithCurrentDistance = useMemo(() => {
-    return stations.map((station) => {
-      if (!userLocation) return station;
-      return {
-        ...station,
-        // La lista debe ordenar/mostrar distancia respecto a la ubicación actual del usuario (metros).
-        distance:
-          haversineDistanceKm(userLocation.lat, userLocation.lng, station.lat, station.lng) * 1000,
-      };
-    });
-  }, [stations, userLocation]);
-
   const sortedStations = useMemo(() => {
-    const list = [...stationsWithCurrentDistance];
+    const list = [...stations];
 
     if (sortMode === 'distanceAsc') {
       list.sort((a, b) => a.distance - b.distance);
@@ -102,10 +89,10 @@ export default function HomeScreen() {
     });
     return list;
 
-    function getPriceForStation(station: (typeof stationsWithCurrentDistance)[number]): number {
+    function getPriceForStation(station: (typeof stations)[number]): number {
       return gasStationCorePrice(station, selectedFuelType);
     }
-  }, [selectedFuelType, sortMode, stationsWithCurrentDistance]);
+  }, [selectedFuelType, sortMode, stations]);
 
   const isLoading = userLocationStatus === 'loading' || stationsStatus === 'loading';
   const showEmpty = stationsStatus === 'empty';
