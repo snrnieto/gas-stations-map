@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   ActivityIndicator,
@@ -20,8 +21,6 @@ import { useGasStationsStore } from "../store/useGasStationsStore";
 import { useBannerBottomInset } from "../hooks/useBannerBottomInset";
 import { useStationPriceHistory } from "../hooks/useStationPriceHistory";
 import { formatCop, formatHistoryDate, formatPricesJsonSummary, fuelDisplayLabel } from "../utils/format";
-import { StationEditForm } from "./StationEditForm";
-import { corePricesFromGasStation } from "../types/gasStation";
 
 export function StationDetailSheet() {
   const { height: windowHeight } = useWindowDimensions();
@@ -29,6 +28,10 @@ export function StationDetailSheet() {
   const bottomInset = useBannerBottomInset();
   const sheetRef = useRef<BottomSheetModalMethods>(null);
   const lastSnappedStationIdRef = useRef<string | null>(null);
+  const pendingPhotoRouteRef = useRef<{
+    pathname: "/price-photo-help";
+    params: { stationId: string; stationName: string };
+  } | null>(null);
 
   const stations = useGasStationsStore((s) => s.stations);
   const viewMode = useGasStationsStore((s) => s.viewMode);
@@ -45,8 +48,6 @@ export function StationDetailSheet() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const { entries: priceHistory, status: priceHistoryStatus, error: priceHistoryError } =
     useStationPriceHistory(selectedStationId, historyOpen);
-
-  const [isEditing, setIsEditing] = useState(false);
 
   /**
    * Altura máxima del sheet: desde el borde superior útil hasta justo encima del anuncio
@@ -81,10 +82,6 @@ export function StationDetailSheet() {
   );
 
   useEffect(() => {
-    setIsEditing(false);
-  }, [selectedStationId]);
-
-  useEffect(() => {
     setHistoryOpen(false);
   }, [selectedStationId]);
 
@@ -110,13 +107,18 @@ export function StationDetailSheet() {
         sheetRef.current?.snapToIndex(0);
         return;
       }
-      sheetRef.current?.snapToIndex(historyOpen || isEditing ? 1 : 0);
+      sheetRef.current?.snapToIndex(historyOpen ? 1 : 0);
     });
     return () => cancelAnimationFrame(id);
-  }, [historyOpen, isEditing, selectedStationId, selectedStation]);
+  }, [historyOpen, selectedStationId, selectedStation]);
 
   const handleDismiss = useCallback(() => {
-    setIsEditing(false);
+    const pending = pendingPhotoRouteRef.current;
+    pendingPhotoRouteRef.current = null;
+    if (pending) {
+      router.push(pending);
+      return;
+    }
     selectStation(null);
   }, [selectStation]);
 
@@ -156,7 +158,6 @@ export function StationDetailSheet() {
       lng: selectedStation.lng,
     });
     setViewMode("map");
-    setIsEditing(false);
     sheetRef.current?.dismiss();
   };
 
@@ -184,24 +185,8 @@ export function StationDetailSheet() {
       }}
     >
       {selectedStation ? (
-        isEditing ? (
-          <BottomSheetScrollView
-            contentContainerStyle={scrollContentPadding}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <StationEditForm
-              stationId={selectedStation.id}
-              initialPrices={corePricesFromGasStation(selectedStation)}
-              onCancel={() => setIsEditing(false)}
-            />
-          </BottomSheetScrollView>
-        ) : (
-          <BottomSheetScrollView
-            contentContainerStyle={scrollContentPadding}
-            showsVerticalScrollIndicator
-          >
-            <>
+        <BottomSheetScrollView contentContainerStyle={scrollContentPadding} showsVerticalScrollIndicator>
+          <>
               <Text className="text-neutral-900 font-bold text-lg">{selectedStation.name}</Text>
               <Text className="text-neutral-600 mt-1" numberOfLines={2}>
                 {selectedStation.business_name}
@@ -264,7 +249,16 @@ export function StationDetailSheet() {
               </View>
               <View className="flex-row gap-2 mt-2">
                 <Pressable
-                  onPress={() => setIsEditing(true)}
+                  onPress={() => {
+                    pendingPhotoRouteRef.current = {
+                      pathname: "/price-photo-help",
+                      params: {
+                        stationId: selectedStation.id,
+                        stationName: selectedStation.name,
+                      },
+                    };
+                    sheetRef.current?.dismiss();
+                  }}
                   className="flex-1 bg-white border border-neutral-200 rounded-2xl px-4 py-3"
                 >
                   <Text className="text-neutral-900 font-semibold text-center">Editar precios</Text>
@@ -339,8 +333,7 @@ export function StationDetailSheet() {
                 )}
               </View>
             </>
-          </BottomSheetScrollView>
-        )
+        </BottomSheetScrollView>
       ) : null}
     </BottomSheetModal>
   );

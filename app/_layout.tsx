@@ -6,9 +6,10 @@ import Constants from 'expo-constants';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Platform, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { shouldShowBannerOverlay } from '../constants/bannerVisibility';
 import { useBannerAdLayoutStore } from '../store/useBannerAdLayoutStore';
 
 export default function RootLayout() {
@@ -21,8 +22,10 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
   const extra = Constants.expoConfig?.extra || {};
   const googleMobileAds = getGoogleMobileAdsModule();
+  const setOverlayBannerEnabled = useBannerAdLayoutStore((s) => s.setOverlayBannerEnabled);
 
   useEffect(() => {
     if (!googleMobileAds?.default) return;
@@ -56,12 +59,18 @@ function RootNavigator() {
     if (!shouldShowBanner) resetBannerLayout();
   }, [shouldShowBanner, resetBannerLayout]);
 
+  useEffect(() => {
+    setOverlayBannerEnabled(shouldShowBannerOverlay(pathname));
+  }, [pathname, setOverlayBannerEnabled]);
+
+  const overlayBannerEnabled = useBannerAdLayoutStore((s) => s.overlayBannerEnabled);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false }} />
-        {shouldShowBanner && bannerLayoutStatus !== 'failed' && (
+        {shouldShowBanner && overlayBannerEnabled && bannerLayoutStatus !== 'failed' && (
           <View
             pointerEvents="box-none"
             style={{

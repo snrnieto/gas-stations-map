@@ -34,9 +34,11 @@ export function useBannerBottomInset(): number {
   const configWantsBanner = canRenderBanner && typeof adUnitId === "string" && adUnitId.length > 0;
   const bannerStatus = useBannerAdLayoutStore((s) => s.status);
   const bannerHeightPx = useBannerAdLayoutStore((s) => s.heightPx);
+  const overlayBannerEnabled = useBannerAdLayoutStore((s) => s.overlayBannerEnabled);
   const bannerBottom = Math.max(insets.bottom, 8);
 
   if (!configWantsBanner) return insets.bottom;
+  if (!overlayBannerEnabled) return insets.bottom;
   if (bannerStatus !== "loaded" || bannerHeightPx <= 0) return insets.bottom;
   return bannerBottom + bannerHeightPx;
 }
