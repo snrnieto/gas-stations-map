@@ -14,8 +14,8 @@ export function formatHistoryDate(iso: string): string {
   }
 }
 
-export function formatCop(value: number): string {
-  if (!Number.isFinite(value)) return '--';
+export function formatCop(value: number | undefined): string {
+  if (value === undefined || !Number.isFinite(value)) return '--';
   const rounded = Math.round(value);
 
   // Intl es soportado en la mayoría de entornos RN modernos; fallback si falla.

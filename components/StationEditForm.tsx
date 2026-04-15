@@ -1,18 +1,25 @@
 import { useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
-import type { Prices } from '../types/gasStation';
+import type { CorePriceValues } from '../types/gasStation';
 import { useGasStationsStore } from '../store/useGasStationsStore';
 
 type Props = {
   stationId: string;
-  initialPrices: Prices;
+  initialPrices: CorePriceValues;
   onCancel: () => void;
 };
 
+function parseFuelInput(raw: string): number | undefined {
+  const t = raw.trim();
+  if (t === '') return undefined;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 export function StationEditForm({ stationId, initialPrices, onCancel }: Props) {
-  const [corriente, setCorriente] = useState(String(initialPrices.corriente));
-  const [premium, setPremium] = useState(String(initialPrices.premium));
-  const [diesel, setDiesel] = useState(String(initialPrices.diesel));
+  const [corriente, setCorriente] = useState(String(initialPrices.corriente ?? ''));
+  const [premium, setPremium] = useState(String(initialPrices.premium ?? ''));
+  const [diesel, setDiesel] = useState(String(initialPrices.diesel ?? ''));
 
   const applyEditedPrices = useGasStationsStore((s) => s.applyEditedPrices);
 
@@ -27,15 +34,10 @@ export function StationEditForm({ stationId, initialPrices, onCancel }: Props) {
   );
 
   const onSave = () => {
-    const parseOrFallback = (raw: string, fallback: number) => {
-      const n = Number(raw);
-      return Number.isFinite(n) ? n : fallback;
-    };
-
-    const nextPrices: Prices = {
-      corriente: parseOrFallback(corriente, initialPrices.corriente),
-      premium: parseOrFallback(premium, initialPrices.premium),
-      diesel: parseOrFallback(diesel, initialPrices.diesel),
+    const nextPrices: CorePriceValues = {
+      corriente: parseFuelInput(corriente),
+      premium: parseFuelInput(premium),
+      diesel: parseFuelInput(diesel),
     };
 
     applyEditedPrices(stationId, nextPrices);

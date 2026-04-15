@@ -77,8 +77,18 @@ export function useStationsQuery() {
       const selectedFuelType = filters.fuelType ?? "corriente";
       const selectedPrice = gasStationCorePrice(station, selectedFuelType);
 
-      if (filters.minPrice !== undefined && selectedPrice < filters.minPrice) return false;
-      if (filters.maxPrice !== undefined && selectedPrice > filters.maxPrice) return false;
+      if (
+        filters.minPrice !== undefined &&
+        selectedPrice !== undefined &&
+        selectedPrice < filters.minPrice
+      )
+        return false;
+      if (
+        filters.maxPrice !== undefined &&
+        selectedPrice !== undefined &&
+        selectedPrice > filters.maxPrice
+      )
+        return false;
       return true;
     });
   }, [filters.fuelType, filters.maxPrice, filters.minPrice, stations]);

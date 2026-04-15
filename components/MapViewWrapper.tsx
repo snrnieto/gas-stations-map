@@ -235,7 +235,7 @@ export function MapViewWrapper({
         id: station.id,
         price: gasStationCorePrice(station, selectedFuelType),
       }))
-      .filter((item) => Number.isFinite(item.price));
+      .filter((item): item is { id: string; price: number } => Number.isFinite(item.price));
 
     const byLow = [...pricedStations].sort((a, b) => a.price - b.price);
     const byHigh = [...pricedStations].sort((a, b) => b.price - a.price);

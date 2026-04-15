@@ -64,7 +64,7 @@ export default function HomeScreen() {
     if (stations.length === 0) return undefined;
     const prices = stations
       .map((s) => gasStationCorePrice(s, selectedFuelType))
-      .filter((p) => Number.isFinite(p));
+      .filter((p): p is number => p !== undefined && Number.isFinite(p));
     if (prices.length === 0) return undefined;
     return Math.min(...prices);
   }, [selectedFuelType, stations]);
@@ -83,15 +83,23 @@ export default function HomeScreen() {
     }
 
     list.sort((a, b) => {
-      const aPrice = getPriceForStation(a);
-      const bPrice = getPriceForStation(b);
-      return sortMode === 'priceAsc' ? aPrice - bPrice : bPrice - aPrice;
+      const aPrice = gasStationCorePrice(a, selectedFuelType);
+      const bPrice = gasStationCorePrice(b, selectedFuelType);
+      const aKey =
+        aPrice === undefined || !Number.isFinite(aPrice)
+          ? sortMode === 'priceAsc'
+            ? Number.POSITIVE_INFINITY
+            : Number.NEGATIVE_INFINITY
+          : aPrice;
+      const bKey =
+        bPrice === undefined || !Number.isFinite(bPrice)
+          ? sortMode === 'priceAsc'
+            ? Number.POSITIVE_INFINITY
+            : Number.NEGATIVE_INFINITY
+          : bPrice;
+      return sortMode === 'priceAsc' ? aKey - bKey : bKey - aKey;
     });
     return list;
-
-    function getPriceForStation(station: (typeof stations)[number]): number {
-      return gasStationCorePrice(station, selectedFuelType);
-    }
   }, [selectedFuelType, sortMode, stations]);
 
   const isLoading = userLocationStatus === 'loading' || stationsStatus === 'loading';

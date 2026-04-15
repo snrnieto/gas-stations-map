@@ -31,8 +31,10 @@ export async function getGasStations(params: GetGasStationsParams): Promise<GasS
       const selectedFuelType = fuelType ?? 'corriente';
       const selectedPrice = gasStationCorePrice(station, selectedFuelType);
 
-      if (minPrice !== undefined && selectedPrice < minPrice) return false;
-      if (maxPrice !== undefined && selectedPrice > maxPrice) return false;
+      if (minPrice !== undefined && selectedPrice !== undefined && selectedPrice < minPrice)
+        return false;
+      if (maxPrice !== undefined && selectedPrice !== undefined && selectedPrice > maxPrice)
+        return false;
       return true;
     })
     .slice(0, limit);

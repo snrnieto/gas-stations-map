@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { FuelType, GasStation, Prices } from "../types/gasStation";
+import type { CorePriceValues, FuelType, GasStation } from "../types/gasStation";
 
 export type LatLng = { lat: number; lng: number };
 export type ViewMode = 'map' | 'list';
@@ -34,7 +34,7 @@ type GasStationsState = {
   selectedStationId: string | null;
 
   // Simulación de backend "edit"
-  editedPricesById: Record<string, Prices>;
+  editedPricesById: Record<string, CorePriceValues>;
 
   // Actions
   setUserLocation: (loc: LatLng) => void;
@@ -54,7 +54,7 @@ type GasStationsState = {
   setViewMode: (viewMode: ViewMode) => void;
 
   selectStation: (stationId: string | null) => void;
-  applyEditedPrices: (stationId: string, prices: Prices) => void;
+  applyEditedPrices: (stationId: string, prices: CorePriceValues) => void;
   clearEditedPrices: (stationId: string) => void;
 };
 

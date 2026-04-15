@@ -6,6 +6,15 @@ export type Prices = {
   diesel: number;
 };
 
+/**
+ * Los tres core pueden faltar por separado (estación sin snapshot, solo algunos combustibles, etc.).
+ */
+export type CorePriceValues = {
+  corriente: number | undefined;
+  premium: number | undefined;
+  diesel: number | undefined;
+};
+
 /** Orden sugerido al mostrar claves dentro de `prices_json`. */
 export const CORE_PRICE_KEYS: readonly FuelType[] = ["corriente", "premium", "diesel"];
 
@@ -30,29 +39,31 @@ export type GasStation = {
   address: string;
   lat: number;
   lng: number;
-  current_corriente: number;
-  current_premium: number;
-  current_diesel: number;
+  current_corriente?: number;
+  current_premium?: number;
+  current_diesel?: number;
   current_prices_extra: Record<string, number>;
   distance: number;
 };
 
-export function gasStationCorePrice(station: GasStation, fuel: FuelType): number {
-  switch (fuel) {
-    case "corriente":
-      return station.current_corriente;
-    case "premium":
-      return station.current_premium;
-    case "diesel":
-      return station.current_diesel;
-  }
+export function gasStationCorePrice(station: GasStation, fuel: FuelType): number | undefined {
+  const raw =
+    fuel === "corriente"
+      ? station.current_corriente
+      : fuel === "premium"
+        ? station.current_premium
+        : station.current_diesel;
+  if (raw === undefined || !Number.isFinite(raw)) return undefined;
+  return raw;
 }
 
-export function corePricesFromGasStation(station: GasStation): Prices {
+export function corePricesFromGasStation(station: GasStation): CorePriceValues {
+  const pick = (v: number | undefined) =>
+    v !== undefined && Number.isFinite(v) ? v : undefined;
   return {
-    corriente: station.current_corriente,
-    premium: station.current_premium,
-    diesel: station.current_diesel,
+    corriente: pick(station.current_corriente),
+    premium: pick(station.current_premium),
+    diesel: pick(station.current_diesel),
   };
 }
 
