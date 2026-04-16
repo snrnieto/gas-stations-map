@@ -78,6 +78,13 @@ module.exports = {
   ...appJson,
   expo: {
     ...appJson.expo,
+    updates: {
+      ...(appJson.expo.updates || {}),
+      url: 'https://u.expo.dev/e3590688-8b5a-46a7-a495-4e174736ccd9',
+    },
+    runtimeVersion: {
+      policy: 'appVersion',
+    },
     plugins,
     android: {
       ...(appJson.expo.android || {}),
