@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "gas-stations-map",
+    "owner": "senira",
     "slug": "gas-stations-map",
     "version": "1.0.0",
     "platforms": [

@@ -94,6 +94,10 @@ module.exports = {
     },
     extra: {
       ...(appJson.expo.extra || {}),
+      eas: {
+        ...((appJson.expo.extra && appJson.expo.extra.eas) || {}),
+        projectId: 'e3590688-8b5a-46a7-a495-4e174736ccd9',
+      },
       googleMapsAndroidApiKey,
       googleMapsIosApiKey,
       admobAndroidBannerUnitId,

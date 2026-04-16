@@ -61,6 +61,32 @@ Para publicar en stores necesitas build firmada y proceso de distribución.
 
 > Nota: para distribución profesional en ambos (sin abrir Android Studio/Xcode manualmente), se recomienda configurar EAS Build.
 
+### EAS Build (remoto)
+
+Comando base (ajusta perfil y plataforma):
+
+```bash
+npx eas-cli build --profile <perfil> --platform <plataforma>
+```
+
+**`--profile`** (definidos en `eas.json`):
+
+| Valor | Uso típico |
+| --- | --- |
+| `preview` | Builds instalables para probar en dispositivo (p. ej. APK interno) mientras la app sigue en desarrollo. |
+| `production` | Build pensado para subir a tiendas (Play Store / App Store o TestFlight). |
+| `development` | Dev client para enlazar con Metro en tu máquina (`expo start`). |
+
+**`--platform`**:
+
+| Valor | Resultado |
+| --- | --- |
+| `android` | Solo Android. |
+| `ios` | Solo iOS. |
+| `all` | Ambas plataformas en un solo comando (dos builds en EAS). |
+
+Las variables que usa `app.config.js` (Maps, AdMob, etc.) deben estar configuradas en el proyecto en [expo.dev](https://expo.dev) para el entorno que corresponda a cada perfil; `.env.local` no se sube al build remoto.
+
 - **Instalar el APK en un dispositivo por USB (ADB):** activa **Depuración USB** en el teléfono (Opciones de desarrollador), conecta el cable y comprueba con `adb devices` que aparezca como `device` (acepta la huella RSA si el teléfono lo pide).
   - **Sin escribir la ruta del APK:** desde la raíz del repo, `cd android && .\gradlew.bat installRelease` (Windows) o `cd android && ./gradlew installRelease` (macOS/Linux). Compila si hace falta e instala en el dispositivo conectado.
   - **Con `adb install`:** no hace falta la ruta absoluta del disco; basta una ruta relativa al directorio donde ejecutes el comando. Desde la raíz del proyecto: `adb install -r android\app\build\outputs\apk\release\app-release.apk` (Windows) o `adb install -r android/app/build/outputs/apk/release/app-release.apk` (macOS/Linux). O entra a esa carpeta y usa solo el nombre: `adb install -r app-release.apk`.
