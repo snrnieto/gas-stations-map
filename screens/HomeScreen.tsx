@@ -384,7 +384,7 @@ export default function HomeScreen() {
             )}
             <Pressable
               onPress={() => setViewMode('list')}
-              className="bg-red-600 rounded-full px-6 py-4 border border-red-700"
+              className="bg-neutral-900 rounded-full px-6 py-4 border border-neutral-800"
             >
               <Text className="text-white font-semibold">
                 List View
@@ -403,7 +403,7 @@ export default function HomeScreen() {
         >
           <Pressable
             onPress={() => setViewMode('map')}
-            className="bg-red-600 rounded-full px-6 py-4 border border-red-700"
+            className="bg-neutral-900 rounded-full px-6 py-4 border border-neutral-800"
           >
             <Text className="text-white font-semibold">Map View</Text>
           </Pressable>
