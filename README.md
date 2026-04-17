@@ -71,19 +71,19 @@ npx eas-cli build --profile <perfil> --platform <plataforma>
 
 **`--profile`** (definidos en `eas.json`):
 
-| Valor | Uso típico |
-| --- | --- |
-| `preview` | Builds instalables para probar en dispositivo (p. ej. APK interno) mientras la app sigue en desarrollo. |
-| `production` | Build pensado para subir a tiendas (Play Store / App Store o TestFlight). |
-| `development` | Dev client para enlazar con Metro en tu máquina (`expo start`). |
+| Valor         | Uso típico                                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------- |
+| `preview`     | Builds instalables para probar en dispositivo (p. ej. APK interno) mientras la app sigue en desarrollo. |
+| `production`  | Build pensado para subir a tiendas (Play Store / App Store o TestFlight).                               |
+| `development` | Dev client para enlazar con Metro en tu máquina (`expo start`).                                         |
 
 **`--platform`**:
 
-| Valor | Resultado |
-| --- | --- |
-| `android` | Solo Android. |
-| `ios` | Solo iOS. |
-| `all` | Ambas plataformas en un solo comando (dos builds en EAS). |
+| Valor     | Resultado                                                 |
+| --------- | --------------------------------------------------------- |
+| `android` | Solo Android.                                             |
+| `ios`     | Solo iOS.                                                 |
+| `all`     | Ambas plataformas en un solo comando (dos builds en EAS). |
 
 Las variables que usa `app.config.js` (Maps, AdMob, etc.) deben estar configuradas en el proyecto en [expo.dev](https://expo.dev) para el entorno que corresponda a cada perfil; `.env.local` no se sube al build remoto.
 
